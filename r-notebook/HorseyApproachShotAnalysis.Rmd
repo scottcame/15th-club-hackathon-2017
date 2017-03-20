@@ -9,7 +9,6 @@ output: pdf_document
 library(tidyverse, quietly=TRUE)
 library(ggthemes, quietly=TRUE)
 library(caret, quietly=TRUE)
-library(randomForest, quietly=TRUE)
 library(rvest, quietly=TRUE)
 library(knitr, quietly=TRUE)
 library(golfcoursegeo, quietly=TRUE)
@@ -82,11 +81,11 @@ $$
 \vspace{10pt}
 $$
 
-In this paper, written for the March, 2016 Hackathon sponsored by [15th Club](http://www.15thclub.com/), we analyze shot-level data from fourteen of European Tour player David Horsey's rounds in 2016.  Our analysis attempts to quantify Horsey's performance on approach shots, considering the context in which each shot was taken.  Our most important finding is that shot distance, lie (Fairway versus Fairway Bunker versus Rough), and putting surface area are significant explanatory factors in predicting an approach shot's probability of landing on the green.  Ambient weather (wind, barometric pressure, temperature) and the presence of greenside hazards do not seem significant in explaining whether shots land on the green, though this finding could well be due to the relatively small sample of data available for analysis.
+This paper, written for the March, 2016 Hackathon sponsored by [15th Club](http://www.15thclub.com/), analyzes shot-level data from fourteen of European Tour player David Horsey's rounds in 2016.  The analysis attempts to quantify Horsey's performance on approach shots, considering the context in which each shot was taken.  Its most important finding is that shot distance, lie (Fairway versus Fairway Bunker versus Rough), and putting surface area are significant explanatory factors in predicting an approach shot's probability of landing on the green.  Ambient weather (wind, barometric pressure, temperature) and the presence of greenside hazards do not seem significant in explaining whether shots land on the green, though this finding could well be due to the relatively small sample of data available for analysis.
 
 # Data Overview
 
-Our analysis leveraged a dataset provided by 15th Club, consisting of `r nrow(shots)` shot-level observations from `r nrow(shots %>% select(Tournament, round_no) %>% unique())` of David Horsey's European Tour rounds in 2016.  This period was one of overall strong performance from Horsey, with six top-twelve finishes and two top-fives, including a T2 at the Turkish Airlines Open:
+The analysis leveraged a dataset provided by 15th Club, consisting of `r nrow(shots)` shot-level observations from `r nrow(shots %>% select(Tournament, round_no) %>% unique())` of David Horsey's European Tour rounds in 2016.  This period was one of overall strong performance from Horsey, with six top-twelve finishes and two top-fives, including a T2 at the Turkish Airlines Open:
 
 ```{r echo=FALSE}
 shots %>%
@@ -118,13 +117,13 @@ The shot-level dataset includes the following variables for each shot (variables
 * Distance to the pin after the shot
 * Lie before the shot (e.g., Tee, Fairway, Fairway Bunker, Green, etc.)
 
-Given our analytical objectives, we subset the shot-level dataset to include only approach shots.  The PGA Tour defines[^1] "approach shot" (for statistics purposes) as a shot that does not originate from on or around the green, and ends up on or around the green or in the hole.  The Tour further defines "on or around the green" as being within 30 yards of the edge of the green.  Because our dataset does not indicate distance from the edge of the green, but rather distance from the pin, we will use a 35-yard distance from the hole in determining "on or around the green". Applying this threshold results in a dataset of `r nrow(approachShots)` approach shots taken in the sampled 14 tournaments.
+The first step in the analysis is to take a subset of the shot-level dataset that includes only approach shots.  The PGA Tour defines[^1] "approach shot" (for statistics purposes) as a shot that does not originate from on or around the green, and ends up on or around the green or in the hole.  The Tour further defines "on or around the green" as being within 30 yards of the edge of the green.  Because the 15th Club dataset does not indicate distance from the edge of the green, but rather distance from the pin, the subsetting process will use a 35-yard distance from the hole in determining "on or around the green". Applying this threshold results in a dataset of `r nrow(approachShots)` approach shots taken in the sampled 14 tournaments.
 
 [^1]: http://www.pgatour.com/stats/stat.02325.html
 
 ## Course Feature Data
 
-To examine the impact of course features on approach shot performance, we use the `golfcoursegeo` package[^2] to obtain, for each hole:
+An important component of this analysis involves examination of the impact of course features on approach shot performance.  The `golfcoursegeo` package[^2] produces, for each hole:
 
 * Area of the green (putting surface)
 * Linearity of the green (i.e., degree of "oblongness")
@@ -142,11 +141,11 @@ for (t in df$Tournament) {
 
 [^2]: https://github.com/scottcame/golfcoursegeo
 
-To compute linearity of the green, we take the ratio of the area of the minimum-radius enclosing circle to the area of the green.  Thus greens that are relatively equal-diameter in their dimensions will have a ratio closer to one than greens that are long and narrow, so that a higher linearity measure indicates a more "unequally proportioned" green.
+To compute linearity of the green, the analysis considers the ratio of the area of the minimum-radius enclosing circle to the area of the green.  Thus greens that are relatively equal-diameter in their dimensions will have a ratio closer to one than greens that are long and narrow, so that a higher linearity measure indicates a more "unequally proportioned" green.
 
 ## Weather Data
 
-Our analysis also explored the effects of weather on approach shot performance, using hourly Automated Surface Observation Station (ASOS) data obtained from an online database[^3] made available at Iowa State University. We manually found the nearest ASOS station (typically a commercial airport) to each golf course in the analysis, then retrieved the hourly observation that was closest to noon local time on each day that Horsey played a round on that course.  See the link below for a list of all available fields; our analysis considered only air temperature, wind speed, and barometric pressure. Please note that the distance from the course to the ASOS station ranged from a few to several miles, and that weather conditions at the time Horsey played any particular shot likely varied somewhat from the daily observation we considered. This is quite possibly why weather conditions proved insignificant in the models estimated below; improving upon the inclusion of weather data is a potential topic of future research.
+The analysis also explored the effects of weather on approach shot performance, using hourly Automated Surface Observation Station (ASOS) data obtained from an online database[^3] made available at Iowa State University. We manually found the nearest ASOS station (typically a commercial airport) to each golf course in the analysis, then retrieved the hourly observation that was closest to noon local time on each day that Horsey played a round on that course.  See the link below for a list of all available fields; this analysis considered only air temperature, wind speed, and barometric pressure. Please note that the distance from the course to the ASOS station ranged from a few to several miles, and that weather conditions at the time Horsey played any particular shot likely varied somewhat from the daily observation we considered. This is quite possibly why weather conditions proved insignificant in the models estimated below; improving upon the inclusion of weather data is a potential topic of future research.
 
 [^3]: https://mesonet.agron.iastate.edu/request/download.phtml
 
@@ -156,7 +155,7 @@ The golfer's objective, when standing over an approach shot, is to finish that h
 
 [^4]: For example, if a pin is tucked on the narrow part of a green, with water on one side and a bunker on the other, and a player is on the back nine in the final round with a three-shot lead, he or she may elect to "play it safe" and aim for the center of the green, rather than aiming at the flag.  Typically, though, proximity to the hole is the goal.
 
-Our analysis will consider the following as explanatory (or independent) variables for these outcomes:
+The analysis will consider the following as explanatory (or independent) variables for these outcomes:
 
 * `DistanceToPinBefore`: Distance from the hole at the start of the shot (in feet)
 * `GreenArea`: The area of the green (in square yards)
@@ -167,7 +166,7 @@ Our analysis will consider the following as explanatory (or independent) variabl
 * `ShotLie`: Lie for the shot (e.g., Tee, Fairway, Fairway Bunker, Rough)
 * `Par`: Par for the hole
 
-As mentioned above, we initially included weather data in the analysis, but found that none of the explanatory variables included (air temperature, wind speed, and barometric pressure) were significant in explaining the dependent variables.  Thus, these variables will not be discussed further here.
+Preliminary efforts initially included weather data in the analysis, but found that none of the explanatory variables included (air temperature, wind speed, and barometric pressure) were significant in explaining the dependent variables.  In the interest of brevity, these variables will not be discussed further here.
 
 ### Basic Summary Statistics and Frequency Counts
 
@@ -205,11 +204,13 @@ table(approachShotsWithCourseInfo$Par) %>% as.data.frame() %>%
   rename(Par=Var1, Frequency=Freq) %>% kable()
 ```
 
-In summary:  nothing really unexpected here.  Horsey hits most of his approach shots from the fairway, though three times he went for the green on par four holes, as well (every tee shot on a par three is considered an approach shot).  He is getting onto the green the vast majority of the time with his approach shots, which is also to be expected from a professional golfer.
+In summary:  nothing really unexpected here.  Horsey hits most of his approach shots from the fairway, though four times he went for the green on par four holes, as well (every tee shot on a par three is considered an approach shot).  He is getting onto the green the vast majority of the time with his approach shots, which is also to be expected from a professional golfer.
+
+In initial modeling of explanatory factors, it quickly became clear that the change in elevation and the number of greenside bunkers and hazards were not significant factors in explaining the outcomes.  So again in the interest of simplifying the presentation of results, these factors will not be considered further here.
 
 ### Relationships of Key Variables
 
-The regression and random forest models that we will fit later will suggest significant relationships between the dependent variables (`DistanceToPinAfter` and `ShotResult`) and the length of the approach shot (`DistanceToPinBefore`) and the lie of the ball for the approach shot (`ShotLie`).  But we can begin to get a sense of these relationships in a simple table:
+The regression models considered later will suggest significant relationships between the dependent variables (`DistanceToPinAfter` and `ShotResult`) and the length of the approach shot (`DistanceToPinBefore`) and the lie of the ball for the approach shot (`ShotLie`).  But  a sense of these relationships emerges from a simple table:
 
 ```{r echo=FALSE}
 approachShotsWithCourseInfo %>%
@@ -231,9 +232,9 @@ approachShotsWithCourseInfo %>%
   kable(digits=2)
 ```
 
-This table strongly suggests some fundamental relationships that are fairly intuitive to golf fans (and certainly to experienced players).  First, the results of an approach shot (in terms of distance from the pin after the shot, and whether the ball rests on the green) are less favorable the longer the shot taken.  And second, there is a significant penalty--in terms of hitting (or getting closer to) the green, as well as the expected number of subsequent shots on a hole--for being in the thick rough or a fairway bunker.  This penalty seems to be between a third and half a stroke, depending on the shot distance.
+This table strongly suggests some fundamental relationships that are fairly intuitive to golf fans (and certainly to experienced players).  First, the results of an approach shot (in terms of distance from the pin after the shot, and whether the ball rests on the green) are less favorable the longer the shot taken.  And second, there is a significant penalty--in terms of hitting (or getting closer to) the green--as well as the expected number of subsequent shots on a hole--for being in the thick rough or a fairway bunker.  This penalty seems to be between a third and half a stroke, depending on the shot distance.
 
-We can examine these same relationships visually:
+A scatterplot provides a visual representation of the same relationships:
 
 ```{r echo=FALSE, fig.width=10}
 ggplot(data=approachShotsWithCourseInfo %>% mutate(DistanceToPinBefore=DistanceToPinBefore/3, DistanceToPinAfter=DistanceToPinAfter/3)) +
@@ -248,34 +249,30 @@ ggplot(data=approachShotsWithCourseInfo %>% mutate(DistanceToPinBefore=DistanceT
 
 In this graphical depiction, the prominence of the light blue (rough) and the few dark green (fairway bunker) at the top of any given vertical slice of the graphic--and the prominence of circles rather than triangles for those observations--underscores that the rough and in fairway bunkers are not the ideal places from which to play an approach shot.  It is also more immediately apparent in the graphic (versus the table) that Horsey had quite a few truly excellent shots--and also some that he would probably rather forget.
 
-In the next phase of our analysis, we attempt to model these relationships more rigorously, and also include course features in the model to determine the impacts of things like green area and greenside hazards.
+The next phase of our analysis attempts to model these relationships more rigorously, and will include course features in the model to determine the impacts of things like green area and greenside hazards.
 
 # Regression and Classification Models
 
-Recall from our prior discussion that we have identified two approach shot outcomes of interest:  having the ball come to rest as close to the hole as possible, and having the ball come to rest on the green.  We have performed a preliminary analysis of two factors that seem to influence these outcomes:  the length of the approach shot, and the lie of the ball for the approach shot.  It would appear, from tabular and graphical analysis, that these explanatory variables are correlated with the outcomes; now we will estimate a least-squares regression for the `DistanceToPinAfter` dependent variable, a logistic regression as well as a random forest classification model for the `ShotResult` dependent variable.
+Recall from the prior discussion that there are two approach shot outcomes of interest here:  having the ball come to rest as close to the hole as possible, and having the ball come to rest on the green.  Preliminary analysis suggests two factors that seem to influence these outcomes:  the length of the approach shot, and the lie of the ball for the approach shot.  It would appear, from tabular and graphical analysis, that these explanatory variables are correlated with the outcomes; the next step is to estimate a least-squares regression for the `DistanceToPinAfter` dependent variable, followed by a logistic regression classification model for the `ShotResult` dependent variable.
 
 The independent (explanatory) variables for these models will include:
 
 * `DistanceToPinBefore`: Distance from the hole at the start of the shot (in feet)
 * `GreenArea`: The area of the green (in square yards)
 * `GreenLinearity`: The linearity of the green (i.e., it's "oblongness")
-* `ApproachElevationChange`: The elevation difference between the green and the spot from which the approach shot is taken (in feet)
-* `GreensideHazards`: The presence of greenside water hazards
-* `GreensideBunkers`: The presence of greenside bunkers
 * `ShotLie`: Lie for the shot (e.g., Tee, Fairway, Fairway Bunker, Rough)
-* `Par`: Par for the hole
 
-Through experimentation, we determined that the counts of greenside hazards and bunkers were not significant explanatory factors for either of our outcome (dependent) variables.  We had thought _a priori_ that Horsey might tend to play approach shots in a manner that avoids greenside hazards, but there really is no evidence that this is the case.  Similarly, we had expected that the par for the hole would be a significant explanatory factor, but this also turned out not to be the case--suggesting that, in fact, approach shots taken as tee shots on par threes are not significantly different from approach shots on par fours and fives. In what follows, we will only present models fitted without these variables included.
+Initial regression runs showed that the counts of greenside hazards and bunkers were not significant explanatory factors for either of the outcome (dependent) variables.  The par for the hole (i.e., whether the approach shot is a par-three tee shot versus a fairway shot on a par 4/5)  turned out to be statistically insignificant as well. The analysis that follows will only present models fitted without these variables included.
 
 ### Least Squares Regression: Explaining Variation in Proximity to the Hole
 
-To analyze factors that explain the distance remaining to the hole after the approach shot, we fit the following ordinary least squares regression:
+To analyze factors that explain the distance remaining to the hole after the approach shot, consider the following ordinary least squares regression:
 $$
 DistanceToPinAfter = \beta_0 + \beta_1 DistanceToPinBefore + \boldsymbol{\beta_2} ShotLie + \beta_3 GreenArea + \beta_4 GreenLinearity + \epsilon
 $$
-Note that the $\boldsymbol\beta_2$ represents a vector of coefficients on dummy variables representing the type of lie, with fairway lies held out as the reference value.
+Note that the $\boldsymbol\beta_2$ represents a vector of coefficients on dummy variables representing the type of lie, with fairway lies held out as the reference value.  Note also that the units of `DistanceToPinAfter` and `DistanceToPinBefore` are in feet, while `GreenArea` is in square yards.
 
-We obtain the following coefficients, standard errors, and p-values from fitting this regression to the `r nrow(approachShotsWithCourseInfo)` approach shot observations:
+Fitting this regression to the `r nrow(approachShotsWithCourseInfo)` approach shot observations results in the following coefficients, standard errors, and p-values:
 
 ```{r echo=FALSE}
 ols <- lm(DistanceToPinAfter ~ DistanceToPinBefore + ShotLie + GreenArea + GreenLinearity, data=approachShotsWithCourseInfo)
@@ -290,9 +287,9 @@ olsDf <- ols %>%
 kable(olsDf, digits=3)
 ```
 
-An $R^2$ value for this regression of `r format(r.squared, digits=2)` indicates that this model explains `r format(r.squared*100, digits=0)` percent of the variation in `DistanceToPinAfter`.  The $F$ statistic value of `r format(olsSummary$fstatistic['value'], digits=2)` with `r olsSummary$fstatistic['numdf']` and `r olsSummary$fstatistic['dendf']` degrees of freedom allows us to reject the null hypothesis that the model does not explain the variation in `DistanceToPinAfter`.  In short: there is a great deal (`r format(100 - r.squared*100, digits=0)` percent, to be exact) of the variation in proximity to the hole that this model does not explain, but we can confidently reject the notion that it does not explain any of the variation.
+An $R^2$ value for this regression of `r format(r.squared, digits=2)` indicates that this model explains `r format(r.squared*100, digits=0)` percent of the variation in `DistanceToPinAfter`.  The $F$ statistic value of `r format(olsSummary$fstatistic['value'], digits=2)` with `r olsSummary$fstatistic['numdf']` and `r olsSummary$fstatistic['dendf']` degrees of freedom leads to rejection of the null hypothesis that the model does not explain the variation in `DistanceToPinAfter`.  In short: there is a great deal (`r format(100 - r.squared*100, digits=0)` percent, to be exact) of the variation in proximity to the hole that this model does not explain, but we can confidently reject the notion that it does not explain any of the variation.
 
-As expected after the graphical presentation in the prior section, the explanatory variables `DistanceToPinBefore` (i.e., the length of the approach shot) and `ShotLie` (for fairway bunker and rough lies) are all statistically significant.  The coefficient on `DistanceToPinBefore` suggests that for every 100 feet added to the length of an approach shot, we would expect the ball to land approximately six feet farther from the hole, controlling for lie and green size and shape.  A six percent rate of growth in expected remaining distance makes sense, considering that golfers play longer shots with "longer" clubs to cover the additional distance, but that longer clubs come with less control and higher variance in where the ball comes to rest after the shot. It is not possible with the data available to test the hypothesis that some (or even most) of the additional six percent distance remaining after the shot is due to lateral inaccuracy in the shot.  This would be an interesting topic for further research and analysis.
+As expected after the graphical presentation in the prior section, the explanatory variables `DistanceToPinBefore` (i.e., the length of the approach shot) and `ShotLie` (for fairway bunker and rough lies) are all statistically significant.  The coefficient on `DistanceToPinBefore` suggests that for every 100 feet added to the length of an approach shot, one would expect the ball to land approximately six feet farther from the hole, controlling for lie and green size and shape.  A six percent rate of growth in expected remaining distance makes sense, considering that golfers play longer shots with "longer" clubs to cover the additional distance, but that longer clubs come with less control and higher variance in where the ball comes to rest after the shot. It is not possible with the data available to test the hypothesis that some (or even most) of the additional six percent distance remaining after the shot is due to lateral inaccuracy in the shot.  This would be an interesting topic for further research and analysis.
 
 The dummy variables for Fairway Bunker and Rough lies indicate that these lies add just over four and six yards, respectively, to the expected distance remaining after the shot, compared to shots of the same distance played from the fairway.  There are several potential explanations for this finding, including:
 
@@ -301,17 +298,17 @@ The dummy variables for Fairway Bunker and Rough lies indicate that these lies a
 * Fairway bunker lies sometimes compel a golfer to choose a higher-lofted club in order to clear the bunker lip, affecting shot distance
 * Occasional "fried egg" lies in a fairway bunker can create impact issues similar to those created by thick rough, with the same consequences
 
-The available data do not allow us to test these hypotheses, but doing so would be a valuable area of further research.
+The available data do not allow testing of these hypotheses, but doing so would be a valuable area of further research.
 
 Interestingly, approach shots played from tees (whether from a par three tee, or from a par four where Horsey "went for it") and shots played from the Intermediate Rough are not statistically significantly different from Fairway shots.  Finally, the model indicates that the size and shape (linearity) of the green are not statistically significant factors in explaining proximity to the hole on approach shots.
 
 ### Logistic Regression: Explaining Variation in Success at Getting on the Green
 
-Now we turn our attention to explaining a different outcome; rather than analyzing proximity to the hole following an approach shot, we will look at whether Horsey succeeded at having the ball come to rest on the green.  In many ways, this is a more valuable insight, since most golfers would rather have a 25-foot putt for birdie (having hit the green in regulation) than a bunker shot 20 feet from a tucked pin, needing to get up-and-down for par. We will use logistic regression to _classify_ each of Horsey's `r nrow(approachShotsWithCourseInfo)` approach shots as successful or not, in terms of the ball resting on the green after the shot.
+Next the analysis will focus on explaining a different outcome: rather than analyzing proximity to the hole following an approach shot, we will look at whether Horsey succeeded at having the ball come to rest on the green.  In many ways, this is a more valuable insight, since most golfers would rather have a 25-foot putt for birdie (having hit the green in regulation) than a bunker shot 20 feet from a tucked pin, needing to get up-and-down for par. The analysis will use logistic regression to _classify_ each of Horsey's `r nrow(approachShotsWithCourseInfo)` approach shots as successful or not, in terms of the ball resting on the green after the shot.
 
-Whereas least squares regression seeks to explain variation in a variable, like `DistanceToPinAfter`, that is continuous over a range of values, logistic regression explains variation in a discrete variable.  A common scenario is to use logistic regression to explain a binary outcome, like `ShotResult`.  The regression coefficients (indirectly) allow us to estimate the impact of the dependent or explanatory variables on the odds of one outcome occurring versus the other.
+Whereas least squares regression seeks to explain variation in a variable, like `DistanceToPinAfter`, that is continuous over a range of values, logistic regression explains variation in a discrete variable.  A common scenario is to use logistic regression to explain a binary outcome, like `ShotResult`.  The regression coefficients (indirectly) allow estimation of the impact of the dependent or explanatory variables on the odds of one outcome occurring versus the other.
 
-We fit the same explanatory variables as in the least squares regression model above, but now the dependent variable is the log-odds ratio of being on the green versus not:
+This model fits the same explanatory variables as in the least squares regression model above, but now the dependent variable is the log-odds ratio of being on the green versus not:
 
 $$
 \ln({\frac{Prob(On Green)}{1-Prob(On Green)}}) = \beta_0 + \beta_1 DistanceToPinBefore + \boldsymbol{\beta_2} ShotLie + \beta_3 GreenArea + \beta_4 GreenLinearity + \epsilon
@@ -334,9 +331,9 @@ logitDf <- logit %>%
 logitDf %>% select(Variable, `Odds Ratio`, Estimate, `Standard Error`, `Pr(>|t|)`) %>% kable(digits=3)
 ```
 
-As with the least squares regression analysis above, we see that `DistanceToPinBefore` (i.e., the length of the shot), and the lie being in the Fairway Bunker or Rough are significant factors in explaining the odds of Horsey hitting the green with his approach shot.  However, we have a new significant explanatory variable in this analysis:  area of the green.  This makes sense, because the area of the green has a direct impact upon whether a ball that is hit to within a specified distance of the hole is in fact on the green.  This means, of course, that if Horsey and his caddie were primarily interested in hitting the green on a given hole--versus just trying to get it as close to the pin as possible--then this analysis enables them to factor in the size of the green in choosing among their tactical options.
+As with the least squares regression analysis above, note that `DistanceToPinBefore` (i.e., the length of the shot), and the lie being in the Fairway Bunker or Rough are significant factors in explaining the odds of Horsey hitting the green with his approach shot.  However, there is a new significant explanatory variable in this analysis:  area of the green.  This makes sense, because the area of the green has a direct impact upon whether a ball that is hit to within a specified distance of the hole is in fact on the green.  This means, of course, that if Horsey and his caddie were primarily interested in hitting the green on a given hole--versus just trying to get it as close to the pin as possible--then this analysis enables them to factor in the size of the green in choosing among their tactical options.
 
-It is easiest to interpret the effects of the factors by considering the marginal odds ratio effects.  For example, holding all other factors constant, a one foot increase in the length of the approach shot (`DistanceToPinBefore`) reduces the odds of hitting the green by `r format(100*(1 - (logitDf %>% filter(Variable=='DistanceToPinBefore') %>% .$OR)), digits=3)` percent.  Similarly, though somewhat more alarmingly, hitting an approach shot from the rough reduces the odds of coming to rest on the green by `r format(100*(1 - (logitDf %>% filter(Variable=='ShotLie: Rough') %>% .$OR)), digits=3)` percent.
+It is easiest to interpret the effects of the factors by considering the marginal odds ratio effects.  For example, holding all other factors constant, a one foot increase in the length of the approach shot (`DistanceToPinBefore`) reduces the odds of hitting the green by `r format(100*(1 - (logitDf %>% filter(Variable=='DistanceToPinBefore') %>% .$OR)), digits=1)` percent.  Similarly, though somewhat more alarmingly, hitting an approach shot from the rough reduces the odds of coming to rest on the green by `r format(100*(1 - (logitDf %>% filter(Variable=='ShotLie: Rough') %>% .$OR)), digits=1)` percent.
 
 An example further illustrates how the odds calculation works.  Consider Horsey standing in the fairway, 200 yards from the flag, contemplating a shot into a perfectly round, 500 square yard green[^5].  The model indicates that his odds of hitting the green with that shot are[^6]:
 
@@ -364,12 +361,20 @@ df <- tibble(Distance=90:250) %>%
     `Fairway Bunker`=exp(3.233-0.006*3*Distance+.002*500-.335*1-2.494),
     Rough=exp(3.233-0.006*3*Distance+.002*500-.335*1-2.352)
     ) %>% gather(Lie, Odds, -Distance)
-ggplot(data=df) + geom_line(aes(x=Distance, y=Odds, color=Lie)) + theme_economist() + theme(legend.position='right', legend.text=element_text(size=9))
+g <- ggplot(data=df) + geom_line(aes(x=Distance, y=Odds, color=Lie)) +
+  geom_abline(slope=0, intercept=1, linetype='dashed') + 
+  #annotate(geom='text', x=245, y=1.25, label='Even (1:1) Odds', size=3) +
+  annotate(geom='text', x=265, y=1, label='Even (1:1) Odds', size=3, hjust=-.48) +
+  theme_economist() + theme(legend.position='right', legend.text=element_text(size=9)) + labs(x='Distance (yards)', y='Odds (x:1)')
+gt <- ggplot_gtable(ggplot_build(g))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid::grid.draw(gt)
+# note: grid.draw() does not display graphic in RStudio...
 ```
 
-Of course, it would be reasonable to ask whether this model, overall, is better than nothing at predicting success at green-hitting.  There are R-squared like measures for logistic regression, but the more common measure of model quality is the Likelihood Ratio test.  It compares the likelihood of observing the estimated model to the likelihood of the "null hypothesis" model that includes only the intercept term.  The test for the model we have fitted here gives a p-value of zero, meaning we can reject the null hypothesis.
+Of course, it would be reasonable to ask whether this model, overall, is better than nothing at predicting success at green-hitting.  There are R-squared like measures for logistic regression, but the more common measure of model quality is the Likelihood Ratio test.  It compares the likelihood of observing the estimated model to the likelihood of the "null hypothesis" model that includes only the intercept term.  The test for the model fitted here gives a p-value of zero, meaning that the estimated model is significantly better at explaining the observed variation than a model with only the intercept term.
 
-Another measure of goodness-of-fit for a logistic regression (or any classification model) is to look at the _confusion matrix_, which displays the number of true and false positives and negatives predicted by the model.  The confusion matrix for our logistic regression model is:
+Another measure of goodness-of-fit for a logistic regression (or any classification model) is to look at the _confusion matrix_, which displays the number of true and false positives and negatives predicted by the model.  The confusion matrix for the logistic regression model above is:
 
 ```{r echo=FALSE}
 cm <- confusionMatrix(predict(logit, type='response') > .5, approachShotsWithCourseInfo$ShotResult=='On Green')
@@ -393,11 +398,13 @@ To a large extent, this paper has confirmed, and quantified, several basic princ
 * A player typically can get the ball closer to the hole, and has a much better chance of hitting the green, from the fairway versus the rough or fairway bunkers
 * Small, tight greens are tough to hit, especially from longer distances
 
-In quantifying the specific marginal effects of factors like length of shot, lie, and course characteristics for a specific player (in our case, European Tour member David Horsey), we have shown how relatively simple statistical modeling techniques can help pinpoint expectations and, hopefully, help a player and his or her caddie make better course management decisions.
+In quantifying the specific marginal effects of factors like length of shot, lie, and course characteristics for a specific player (in our case, European Tour member David Horsey), this paper has shown how relatively simple statistical modeling techniques can help pinpoint expectations and, hopefully, help a player and his or her caddie make better course management decisions.
 
-The analysis here also suggests potentially fruitful topics of further research.  First and foremost, it would be instructive to compare the model coefficients for David Horsey to his fellow competitors, both on the European Tour and the PGA Tour.  It would also be helpful to collect more observations of intermediate rough and tee lies, to see if a larger sample would boost the significance of those variables.  We were disappointed that weather data proved insignificant in the models fitted here; perhaps more frequent observations, that introduced greater variance, would open up possibilities there.
+The analysis here also suggests potentially fruitful topics of further research.  First and foremost, it would be instructive to compare the model coefficients for David Horsey to his fellow competitors, both on the European Tour and the PGA Tour.  It would also be helpful to collect more observations of intermediate rough and tee lies, to see if a larger sample would boost the significance of those variables.  It is disappointing that weather data proved insignificant in the models fitted here; perhaps more frequent observations, that introduced greater variance, would open up possibilities there.
 
 The author thanks 15th Club for sponsoring this Hackathon, and for providing the data that allowed for the fitting of these models.  It has been a lot of fun!
+
+To explore the R/RMarkdown source code used to create this paper, see https://github.com/scottcame/15th-club-hackathon-2017.
 
 ### Author Contact Information
 
