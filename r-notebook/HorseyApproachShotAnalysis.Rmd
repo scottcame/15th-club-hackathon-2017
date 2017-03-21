@@ -81,7 +81,7 @@ $$
 \vspace{10pt}
 $$
 
-This paper, written for the March, 2016 Hackathon sponsored by [15th Club](http://www.15thclub.com/), analyzes shot-level data from fourteen of European Tour player David Horsey's rounds in 2016.  The analysis attempts to quantify Horsey's performance on approach shots, considering the context in which each shot was taken.  Its most important finding is that shot distance, lie (Fairway versus Fairway Bunker versus Rough), and putting surface area are significant explanatory factors in predicting an approach shot's probability of landing on the green.  Ambient weather (wind, barometric pressure, temperature) and the presence of greenside hazards do not seem significant in explaining whether shots land on the green, though this finding could well be due to the relatively small sample of data available for analysis.
+This paper, written for the March, 2017 Hackathon sponsored by [15th Club](http://www.15thclub.com/), analyzes shot-level data from fourteen of European Tour player David Horsey's rounds in 2016.  The analysis attempts to quantify Horsey's performance on approach shots, considering the context in which each shot was taken.  Its most important finding is that shot distance, lie (Fairway versus Fairway Bunker versus Rough), and putting surface area are significant explanatory factors in predicting an approach shot's probability of landing on the green.  Ambient weather (wind, barometric pressure, temperature) and the presence of greenside hazards do not seem significant in explaining whether shots land on the green, though this finding could well be due to the relatively small sample of data available for analysis.
 
 # Data Overview
 
